@@ -55,52 +55,49 @@ def wr_cover(wadd,wda,radd):
             )
 
 def wr_port_cover(tnx):
-    print(tnx)
     pass
-
 
 
 
 @cocotb.test()
 async def dut_test(dut):
-        global expected_value
-        dut.RST_N.value =1
-        await Timer(1,'ns')
-        dut.RST_N.value = 0
-        
-        await Timer(1,'ns')
-        await RisingEdge(dut.CLK)
+    global expected_value
+    dut.RST_N.value =1
+    await Timer(1,'ns')
+    dut.RST_N.value = 0
     
-        dut.RST_N.value=1
-        expected_value = []
-        wrdrv = InputDriver(dut,'',dut.CLK)
-        IO_montior(dut,'',dut.CLK,callback=wr_port_cover) 
-        #await Timer(1,'ns')
-               
-        for i in range(200):
-                wd=random.randint(0,1)
-                #wd=1
-                #wa=4
-                wa=random.randint(4,5)
-                ra=random.randint(0,3)
-                x=sig(wa,wd,ra)
-                expected_value.append(wd)
-                #wrdrv._driver_send(x)
-                wrdrv.append(x)
+    await Timer(1,'ns')
+    await RisingEdge(dut.CLK)
 
-                wr_cover(wa,wd,ra)
-       
-        await Timer(500,'ns')
-        OutputDriver(dut,'',dut.CLK,cb_fn) 
+    dut.RST_N.value=1
+    expected_value = []
+    wrdrv = InputDriver(dut,'',dut.CLK)
+    IO_montior(dut,'',dut.CLK,callback=wr_port_cover) 
+    #await Timer(1,'ns')
+    OutputDriver(dut,'',dut.CLK,cb_fn)       
+    #out._driver_send(0)
+    for i in range(200):
+            wd=random.randint(0,1)
+            #wd=1
+            #wa=4
+            wa=random.randint(4,5)
+            ra=random.randint(0,3)
+            x=sig(wa,wd,ra)
+            #wrdrv._driver_send(x)
+            wrdrv.append(x)
+            expected_value.append(wd)
 
-        
-        coverage_db.report_coverage(cocotb.log.info,bins=True)
-        coverage_file=os.path.join( os.getenv('RESULTS_PATH',"./"),'coverage.xml')
-        coverage_db.export_to_xml(filename=coverage_file)
-        
-        
-       
- 
+            wr_cover(wa,wd,ra)
+    await Timer(len(expected_value)*2,'ns')
+   
+
+    
+    coverage_db.report_coverage(cocotb.log.info,bins=True)
+    coverage_file=os.path.join( os.getenv('RESULTS_PATH',"./"),'coverage.xml')
+    coverage_db.export_to_xml(filename=coverage_file)              
+                
+           
+     
 
         
         
@@ -155,27 +152,28 @@ class IO_montior(BusMonitor):
             self._recv({'previous':prev,'current':phases.get(tnx,'NOTHING')})
             prev=phases.get(tnx,'NOT')
 
-            
-class OutputDriver(BusDriver):
-    _signals =['write_rdy','read_rdy','read_en','read_data']
-    def __init__(self,dut,name,clk,sb_callback):
-        BusDriver.__init__(self,dut,name,clk)
-        self.bus.read_en.value=0
-        self.clk=clk
-        self.callback=sb_callback
-        self.append(0)
 
-    async def _driver_send(self,value,sync=True):
+
+class OutputDriver(BusDriver):
+    _signals = ['write_rdy', 'read_rdy', 'read_en', 'read_data']
+
+    def __init__(self, dut, name, clk, sb_callback):
+        BusDriver.__init__(self, dut, name, clk)
+        self.bus.read_en.value = 0
+        self.clk = clk
+        self.callback = sb_callback
+        self._driver_send(0)
+
+    async def _driver_send(self, value, sync=True):
         while True:
-            if self.bus.read_rdy.value !=1:
+            if self.bus.read_rdy.value != 1:
                 await RisingEdge(self.bus.read_rdy)
             self.bus.read_en.value = 1
-               # self.bus.data.value = value
             await ReadOnly()
             self.callback(int(self.bus.read_data.value))
             await RisingEdge(self.clk)
-           
             await NextTimeStep()
-            self.bus.read_en.value=0
+            self.bus.read_en.value = 0
 
-       
+
+

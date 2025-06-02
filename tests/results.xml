@@ -1,6 +1,6 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1748088883" />
-    <testcase name="dut_test" classname="dut_test" file="/mnt/c/Users/kesir/Desktop/projects/interfaces-sureshwarkesiraju/tests/dut_test.py" lineno="64" time="0.03520989418029785" sim_time_ns="505.001" ratio_time="14342.58783664791" />
+    <property name="random_seed" value="1748877959" />
+    <testcase name="dut_test" classname="dut_test" file="/mnt/c/Users/kesir/Desktop/projects/interfaces-sureshwarkesiraju/tests/dut_test.py" lineno="62" time="0.03804969787597656" sim_time_ns="405.001" ratio_time="10644.00041545942" />
   </testsuite>
 </testsuites>
