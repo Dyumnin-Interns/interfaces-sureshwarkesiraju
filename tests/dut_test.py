@@ -11,7 +11,7 @@ def cb_fn(actual_value):
     global expected_value
     #print("****************************",actual_value)
     #print(f"actual: {int(actual_value)}, Expected: {expected_value.pop(0)}")
-    assert (actual_value) == expected_value.pop(0), f"Error: Got {int(actual_value)}, expected {exp}"
+    assert (actual_value) == expected_value.pop(0), f"Error: Got {int(actual_value)}, expected {expected_value}"
     
 
 class sig:
