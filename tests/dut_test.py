@@ -97,15 +97,6 @@ def ab_cover(a, b):
 def a_prot_cover(txn):
     pass
 
-
-
-
-
-
-
-
-
-
     
 
 @cocotb.test()
@@ -126,15 +117,15 @@ async def dut_test(dut):
     Inout_Monitor(dut,'',dut.CLK,callback=a_prot_cover) 
     out=OutputDriver(dut,'',dut.CLK,cb_fn)
 
-    #OutputDriver(dut,'',dut.CLK,cb_fn)
+ 
     for i in range(10):
         #wd=random.randint(0,1)
         #wa=random.randint(4,5)
-        #ra=3
+ 
         a = random.randint(0, 1)
         b = random.randint(0, 1)
-        #x1=sig(4,a,3)
-        #x2=sig(5,b,3)        #wrdrv._driver_send(x)
+  
+  
         await wrdrv._driver_send(sig(4,a,3))
         await wrdrv._driver_send(sig(5,b,3))
         await rdrv._driver_send(sig(0,0,3))
