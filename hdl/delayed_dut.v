@@ -202,4 +202,3 @@ module dut(CLK,
   `endif // BSV_NO_INITIAL_BLOCKS
   // synopsys translate_on
 endmodule  // dut
-

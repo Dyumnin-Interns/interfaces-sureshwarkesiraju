@@ -5,12 +5,16 @@ from cocotb_bus.drivers import BusDriver
 from cocotb_coverage.coverage import CoverCross, CoverPoint ,coverage_db
 from cocotb_bus.monitors import BusMonitor
 import os
+from cocotb.utils import get_sim_time
+
 
 #call back function
 def cb_fn(actual_value):
     global expected_value
     #print("****************************",actual_value)
-    #print(f"actual: {int(actual_value)}, Expected: {expected_value.pop(0)}")
+
+
+   # print(f"actual: {int(actual_value)}, Expected: {expected_value.pop(0)}")
     assert (actual_value) == expected_value.pop(0), f"Error: Got {int(actual_value)}, expected {expected_value}"
     
 
@@ -19,6 +23,8 @@ class sig:
         self.write_address = write_address
         self.write_data= write_data
         self.read_address= read_address
+
+
 
 
 '''
@@ -102,7 +108,6 @@ def a_prot_cover(txn):
 @cocotb.test()
 async def dut_test(dut):
     global expected_value
-    global expected
     dut.RST_N.value =1
     await Timer(1,'ns')
     dut.RST_N.value = 0
@@ -118,7 +123,7 @@ async def dut_test(dut):
     out=OutputDriver(dut,'',dut.CLK,cb_fn)
 
  
-    for i in range(10):
+    for i in range(100):
         #wd=random.randint(0,1)
         #wa=random.randint(4,5)
  
@@ -128,24 +133,37 @@ async def dut_test(dut):
   
         await wrdrv._driver_send(sig(4,a,3))
         await wrdrv._driver_send(sig(5,b,3))
-        await rdrv._driver_send(sig(0,0,3))
+        #print(f"Time = {get_sim_time('ns')} ns")
+        expected_value.append( a | b)          
+      #  for _ in range(50):
+       #     await RisingEdge(dut.CLK)
+        #await dealyfordut(dut)
+       
+        rdrv.append(sig(0,0,2))
+        while True:
+            await RisingEdge(dut.CLK)
+            if dut.read_data.value==1:
+                break
 
      #   print("A AND B VALUES:",a,b)
-
+    #    print(dut.read_data.value)
+   #     print(f"Time = {get_sim_time('ns')} ns")
         #await Timer(10,'ns')
-        expected_value.append( a | b)    
+        rdrv.append(sig(0,0,3))        
         await out._driver_send(0)
+        #print("STARTING")
         # wr_cover(wa,wd,ra)
         ab_cover(a,b)
+    #print("OUT OF LOOP!!")
     while len(expected_value) > 0:
-        await Timer(5, 'ns') 
-        
-
-   
-
-   
-
+        await Timer(5,'ns') 
     
+
+   
+
+   
+
+ 
     coverage_db.report_coverage(cocotb.log.info,bins=True)
     coverage_file=os.path.join( os.getenv('RESULTS_PATH',"./"),'coverage.xml')
     coverage_db.export_to_xml(filename=coverage_file)              
@@ -163,8 +181,8 @@ class writeDriver(BusDriver):
         self.bus.write_en.value=0
         self.clk=clk
     async def _driver_send(self,value,sync=True):
-#        for i in range(random.randint(0, 20)):
- #           await RisingEdge(self.clk)
+      #  for i in range(5):
+       #     await RisingEdge(self.clk)
         if self.bus.write_rdy.value !=1:
             await RisingEdge(self.bus.write_rdy)
         self.bus.write_en.value=1
@@ -172,7 +190,7 @@ class writeDriver(BusDriver):
         self.bus.write_data.value = value.write_data 
         await ReadOnly()
         await RisingEdge(self.clk)
-      #  print("WRITE DONE!!")
+       # print("WRITE DONE!!")
         await NextTimeStep()
         self.bus.write_en.value=0
 
@@ -184,19 +202,19 @@ class ReadDriver(BusDriver):
     def __init__(self,dut,name,clk):
         BusDriver.__init__(self,dut,name,clk)
         self.bus.read_en.value=0
-        #self.bus.write_en.value=0
+        #self.bus.write_en.valu x1=sig(4,a,3)ie=0
         self.clk=clk
 
     async def _driver_send(self,value,sync=True):
-        #for i in range(random.randint(0, 20)):
-         #   await RisingEdge(self.clk)
+    #    for i in range(5):
+     #       await RisingEdge(self.clk)
         if self.bus.read_rdy.value !=1:
             await RisingEdge(self.bus.read_rdy)
         self.bus.read_en.value=1
         self.bus.read_address.value=value.read_address
         await ReadOnly()
         await RisingEdge(self.clk)
-       # print("READ ADD SENT",self.bus.read_address.value)
+        #print("READ ADD SENT",self.bus.read_address.value)
         await NextTimeStep()
         self.bus.read_en.value=0
 
@@ -266,20 +284,21 @@ class OutputDriver(BusDriver):
     
 
     async def _driver_send(self, value, sync=True):  
-    
-    #    for i in range(random.randint(3, 20)):
-     #       await RisingEdge(self.clk)
+
         if self.bus.read_rdy.value != 1:
             await RisingEdge(self.bus.read_rdy)
         self.bus.read_en.value=1
+       # if self.bus.read_address.value ==2:
+         #   print("VALUE--->",self.bus.read_data.value)
+          #  await RisingEdge(self.bus.read_data.value)        
+        await ReadOnly()   
    #     self.bus.read_address.value = self.read_address
     #    await RisingEdge(self.clk)
-        await ReadOnly()
         #print(f"READ DATA SEEN: {int(self.bus.read_data.value)}")
         self.callback(self.bus.read_data.value)
         await RisingEdge(self.clk)
-        #print("READ DONE!!!")
-        #print(" ")
+       # print("READ DONE!!!")
+       # print(" ")
         await NextTimeStep()
         self.bus.read_en.value = 0
 
